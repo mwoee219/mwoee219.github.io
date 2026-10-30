@@ -1,0 +1,824 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="StudyPace - a deadline and academic workload planner for university students. Clickable prototype.">
+<style>
+:root{color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:#EDEBE4;color:#2B2A26}
+img{max-width:100%}
+[hidden]:not([hidden=until-found i]){display:none!important}
+</style>
+</head>
+<body>
+<title>StudyPace Prototype</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,400&family=Playfair+Display:ital,wght@1,500&display=swap">
+<style>
+/* Layout: a single phone held on a quiet stage; the device surface keeps the product's own light palette, the stage follows the viewer's theme. */
+:root{
+  --page-bg:#EDEBE4; --page-fg:#2B2A26; --page-muted:#6E6A62; --page-line:#D8D4CA; --page-accent:#2F6E7D;
+  --app-bg:#F7F5F0; --app-card:#FFFDFA; --app-line:#E7E1D8; --app-ink:#26241F; --app-muted:#6E6A62;
+  --app-teal:#2F6E7D; --app-teal-soft:#E2EDF0; --app-sage:#DCE8E2;
+  --lo:#2F7D4E; --lo-bg:#E4F0E8; --mid:#8C6210; --mid-bg:#F5EEDC; --hi:#A8503C; --hi-bg:#F7E6E0;
+  --sans:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  --mark:"Playfair Display",Georgia,serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --page-bg:#16171A; --page-fg:#E7E5E0; --page-muted:#9B978F; --page-line:#2E3035; --page-accent:#8DC0CB; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --page-bg:#16171A; --page-fg:#E7E5E0; --page-muted:#9B978F; --page-line:#2E3035; --page-accent:#8DC0CB; color-scheme:dark}
+
+html,body{height:100%}
+body{margin:0;background:var(--page-bg);color:var(--page-fg);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+*{box-sizing:border-box}
+.stage{min-height:100%;display:flex;flex-direction:column;align-items:center;gap:18px;padding-block:28px 36px;padding-left:16px;padding-right:16px}
+.stage-head{width:min(560px,100%);display:flex;flex-direction:column;gap:6px;text-align:center}
+.stage-head h1{margin:0;font-family:var(--mark);font-style:italic;font-weight:500;font-size:30px;letter-spacing:.2px;color:var(--page-accent)}
+.stage-head p{margin:0;font-size:14px;line-height:1.5;color:var(--page-muted)}
+
+/* ---------- device ---------- */
+.phone{width:min(390px,100%);height:min(844px,max(560px,100svh - 230px));background:#1C1D1F;border-radius:40px;padding:11px;box-shadow:0 24px 60px rgba(20,22,25,.3),0 2px 6px rgba(20,22,25,.2);flex:none}
+.screen{position:relative;height:100%;background:var(--app-bg);border-radius:30px;overflow:hidden;display:flex;flex-direction:column;color:var(--app-ink);font-size:15px}
+.status{flex:none;display:flex;justify-content:space-between;align-items:center;padding:9px 22px 3px;font-size:12.5px;font-weight:600;color:var(--app-ink);letter-spacing:.2px}
+.status span{display:flex;gap:4px;align-items:center}
+
+.appbar{flex:none;padding:6px 18px 12px;display:flex;align-items:center;gap:10px;min-height:46px}
+.appbar .back{appearance:none;background:none;border:0;padding:4px 6px 4px 0;font:inherit;color:var(--app-teal);font-weight:600;font-size:15px;cursor:pointer;display:flex;align-items:center;gap:3px}
+.appbar h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.2px;min-width:0}
+.appbar .sub{margin:2px 0 0;font-size:12.5px;color:var(--app-muted);font-weight:500}
+.appbar .mark{font-family:var(--mark);font-style:italic;font-weight:500;font-size:23px;color:var(--app-teal)}
+
+.view{flex:1;overflow-y:auto;overflow-x:hidden;padding:0 16px 20px;display:none;flex-direction:column;gap:14px;-webkit-overflow-scrolling:touch}
+.view.on{display:flex}
+
+.tabbar{flex:none;display:grid;grid-template-columns:repeat(4,1fr);border-top:1px solid var(--app-line);background:var(--app-card);padding:7px 4px calc(9px + env(safe-area-inset-bottom,0px))}
+.tabbar button{appearance:none;background:none;border:0;font:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 0;color:var(--app-muted);font-size:10.5px;font-weight:600;letter-spacing:.2px}
+.tabbar button svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.tabbar button[aria-current="page"]{color:var(--app-teal)}
+
+/* ---------- pieces ---------- */
+.card{background:var(--app-card);border:1px solid var(--app-line);border-radius:16px;padding:14px 15px}
+.sec{font-size:11.5px;font-weight:700;letter-spacing:1.2px;text-transform:uppercase;color:var(--app-muted);margin:4px 0 -4px}
+
+.meter{background:var(--app-card);border:1px solid var(--app-line);border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:11px}
+.meter .top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.meter .rng{font-size:27px;font-weight:700;letter-spacing:-.6px;font-variant-numeric:tabular-nums}
+.meter .cap{font-size:12.5px;color:var(--app-muted)}
+.track{height:9px;border-radius:5px;background:#EAE6DE;overflow:hidden;display:flex}
+.track i{display:block;height:100%;border-radius:5px}
+.pill{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;padding:4px 10px;border-radius:999px;letter-spacing:.2px}
+.pill.lo{color:var(--lo);background:var(--lo-bg)} .pill.mid{color:var(--mid);background:var(--mid-bg)} .pill.hi{color:var(--hi);background:var(--hi-bg)}
+.dot{width:7px;height:7px;border-radius:4px;background:currentColor;flex:none}
+
+.banner{display:flex;gap:11px;align-items:flex-start;background:var(--hi-bg);border:1px solid #EBCDC4;border-radius:16px;padding:13px 14px;text-align:left;width:100%;font:inherit;cursor:pointer;color:inherit}
+.banner b{display:block;font-size:14.5px;color:var(--hi)}
+.banner p{margin:3px 0 0;font-size:13px;line-height:1.4;color:var(--app-muted)}
+.banner .chev{margin-left:auto;color:var(--hi);font-size:18px;line-height:1;align-self:center}
+
+/* study block rows */
+.block{display:flex;gap:11px;align-items:center;background:var(--app-card);border:1px solid var(--app-line);border-radius:14px;padding:11px 12px}
+.block .tickbtn{appearance:none;background:none;border:0;padding:0;cursor:pointer;flex:none}
+.block .tick{width:21px;height:21px;border-radius:7px;border:1.8px solid #CFC9BE;display:flex;align-items:center;justify-content:center}
+.block.done .tick{background:var(--lo);border-color:var(--lo)}
+.block .tick svg{display:none;width:12px;height:12px;stroke:#fff;fill:none;stroke-width:2.6;stroke-linecap:round;stroke-linejoin:round}
+.block.done .tick svg{display:block}
+.block .txt{min-width:0;flex:1}
+.block .ttl{font-size:14.5px;font-weight:600;line-height:1.3}
+.block.done .ttl{text-decoration:line-through;color:var(--app-muted)}
+.block .meta{font-size:12.5px;color:var(--app-muted);margin-top:2px}
+.startbtn{appearance:none;font:inherit;cursor:pointer;flex:none;background:var(--app-teal-soft);color:var(--app-teal);border:0;border-radius:999px;padding:8px 14px;font-size:13px;font-weight:700}
+.logged{flex:none;font-size:12.5px;font-weight:700;color:var(--lo);background:var(--lo-bg);border-radius:999px;padding:6px 11px}
+
+.wk{background:var(--app-card);border:1px solid var(--app-line);border-radius:16px;overflow:hidden}
+.wk > .hd{width:100%;background:none;border:0;font:inherit;color:inherit;cursor:pointer;display:flex;align-items:center;gap:11px;padding:13px 14px;text-align:left}
+.wk .bar{flex:none;width:5px;align-self:stretch;border-radius:3px}
+.wk .nm{font-size:14.5px;font-weight:700}
+.wk .dt{font-size:12.5px;color:var(--app-muted);margin-top:1px}
+.wk .rt{margin-left:auto;display:flex;align-items:center;gap:9px}
+.wk .hrs{font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}
+.wk .chev{color:var(--app-muted);transition:transform .18s ease;font-size:13px}
+.wk.open .chev{transform:rotate(90deg)}
+.days{border-top:1px solid var(--app-line);padding:4px 14px 11px;display:none;flex-direction:column}
+.wk.open .days{display:flex}
+.day{display:grid;grid-template-columns:62px 1fr 64px;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #F1EDE6;font-size:13px}
+.day:last-child{border-bottom:0}
+.day .d{color:var(--app-muted);font-weight:600;font-variant-numeric:tabular-nums}
+.day.now .d{color:var(--app-teal)}
+.day .tr{height:7px;border-radius:4px;background:#EFEBE3;overflow:hidden}
+.day .tr i{display:block;height:100%;border-radius:4px}
+.day .h{text-align:right;font-weight:600;font-variant-numeric:tabular-nums}
+.day .h.free{color:var(--app-muted);font-weight:500}
+.hint{font-size:12.5px;color:var(--app-muted);line-height:1.45;margin:0}
+.why{appearance:none;background:none;border:0;padding:5px 0;font:inherit;cursor:pointer;color:var(--app-teal);font-size:12.5px;font-weight:700;display:flex;align-items:center;gap:6px;text-align:left}
+.why span{flex:none;width:17px;height:17px;border-radius:9px;background:var(--app-teal-soft);font-size:12px;line-height:17px;text-align:center}
+.whybox{display:none;font-size:12.5px;line-height:1.45;color:var(--app-muted);background:var(--app-sage);border-radius:11px;padding:10px 12px;margin-top:6px}
+.whybox.on{display:block}
+
+.tk{display:flex;gap:11px;align-items:flex-start;background:var(--app-card);border:1px solid var(--app-line);border-radius:14px;padding:12px 13px;width:100%;font:inherit;text-align:left;cursor:pointer;color:inherit}
+.tk .cs{font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--app-teal)}
+.tk .ttl{font-size:14.5px;font-weight:600;line-height:1.3;margin-top:2px}
+.tk .meta{font-size:12.5px;color:var(--app-muted);margin-top:3px}
+.tk .rt{margin-left:auto;text-align:right;flex:none;align-self:center}
+.tk .est{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums}
+.tk .estl{font-size:10.5px;color:var(--app-muted);letter-spacing:.3px;text-transform:uppercase;font-weight:600}
+
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{appearance:none;font:inherit;cursor:pointer;border:1.5px solid var(--app-line);background:var(--app-card);color:var(--app-ink);border-radius:999px;padding:9px 15px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--app-teal);border-color:var(--app-teal);color:#fff}
+
+.learned{background:var(--app-sage);border-radius:12px;padding:11px 13px;font-size:12.5px;line-height:1.45;margin-top:11px}
+.learned b{color:var(--app-teal)}
+
+.ms{display:flex;gap:11px;align-items:flex-start;padding:10px 0;border-bottom:1px solid #F1EDE6}
+.ms:last-child{border-bottom:0}
+.ms .tick{flex:none;width:19px;height:19px;border-radius:6px;border:1.8px solid #CFC9BE;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.ms.done .tick{background:var(--lo);border-color:var(--lo)}
+.ms .tick svg{display:none;width:11px;height:11px;stroke:#fff;fill:none;stroke-width:2.8;stroke-linecap:round;stroke-linejoin:round}
+.ms.done .tick svg{display:block}
+.ms .t{font-size:14px;font-weight:600}
+.ms.done .t{color:var(--app-muted);text-decoration:line-through}
+.ms .w{font-size:12.5px;color:var(--app-muted);margin-top:1px}
+.ms .tag{margin-left:auto;font-size:11px;font-weight:700;color:var(--app-teal);background:var(--app-teal-soft);padding:3px 8px;border-radius:999px;align-self:center;flex:none}
+
+.kv{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #F1EDE6;font-size:14px}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--app-muted)}
+.kv .v{font-weight:600;text-align:right}
+
+.btn{appearance:none;font:inherit;cursor:pointer;width:100%;border-radius:14px;padding:14px;font-size:15px;font-weight:700;border:1.5px solid transparent}
+.btn.pri{background:var(--app-teal);color:#fff}
+.btn.sec{background:transparent;color:var(--app-muted);border-color:var(--app-line)}
+.btn.stop{background:var(--hi);color:#fff}
+
+/* ---------- focus session ---------- */
+.timer{background:var(--app-card);border:1px solid var(--app-line);border-radius:18px;padding:20px 16px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center}
+.timer .big{font-size:58px;font-weight:700;letter-spacing:-2px;font-variant-numeric:tabular-nums;line-height:1.05}
+.timer .of{font-size:13px;color:var(--app-muted)}
+.timer .tr{width:100%;height:9px;border-radius:5px;background:#EAE6DE;overflow:hidden;margin-top:10px}
+.timer .tr i{display:block;height:100%;border-radius:5px;background:var(--app-teal);transition:width .4s linear}
+.timer.over .tr i{background:var(--hi)}
+.timer.over .big{color:var(--hi)}
+.dev{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}
+.devchip{font-size:12px;font-weight:600;border-radius:999px;padding:6px 11px;background:var(--lo-bg);color:var(--lo);display:inline-flex;gap:5px;align-items:center}
+.devchip.warn{background:var(--mid-bg);color:var(--mid)}
+.resrow{display:flex;gap:10px}
+.resrow div{flex:1;background:var(--app-card);border:1px solid var(--app-line);border-radius:14px;padding:13px 12px;text-align:center}
+.resrow .n{font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.5px}
+.resrow .l{font-size:11.5px;color:var(--app-muted);margin-top:3px;line-height:1.3}
+
+/* ---------- calibration ---------- */
+.cal{display:grid;grid-template-columns:1fr 54px 60px;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F1EDE6;font-size:13.5px}
+.cal:last-child{border-bottom:0}
+.cal .nm{font-weight:600;line-height:1.3}
+.cal .nm span{display:block;font-size:11.5px;color:var(--app-muted);font-weight:500;margin-top:1px}
+.cal .r{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.cal .r.up{color:var(--hi)} .cal .r.dn{color:var(--lo)}
+.cal .s{text-align:right;font-size:11.5px;color:var(--app-muted)}
+
+/* ---------- status table ---------- */
+.fn{display:flex;gap:10px;align-items:flex-start;padding:11px 0;border-bottom:1px solid #F1EDE6}
+.fn:last-child{border-bottom:0}
+.fn .n{font-size:14px;font-weight:600;line-height:1.3;flex:1;min-width:0}
+.fn .n span{display:block;font-size:12px;color:var(--app-muted);font-weight:500;margin-top:2px;line-height:1.35}
+.badge{flex:none;font-size:11px;font-weight:700;border-radius:999px;padding:4px 9px;letter-spacing:.2px}
+.badge.d{background:var(--lo-bg);color:var(--lo)}
+.badge.p{background:var(--mid-bg);color:var(--mid)}
+.badge.n{background:#EFEBE3;color:var(--app-muted)}
+
+.src{display:flex;gap:11px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #F1EDE6}
+.src:last-child{border-bottom:0}
+.src .ic{flex:none;width:34px;height:34px;border-radius:10px;background:var(--app-teal-soft);color:var(--app-teal);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.src.off{opacity:.5}
+.src.off .ic{background:#EFEBE3;color:var(--app-muted)}
+.src .n{font-size:14.5px;font-weight:600}
+.src .m{font-size:12.5px;color:var(--app-muted);margin-top:2px;line-height:1.35}
+.src .st{margin-left:auto;font-size:11.5px;font-weight:700;color:var(--lo);background:var(--lo-bg);padding:4px 9px;border-radius:999px;flex:none;align-self:center}
+.src.off .st{color:var(--app-muted);background:#EFEBE3}
+
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #F1EDE6}
+.row:last-child{border-bottom:0}
+.row .n{font-size:14.5px;font-weight:600}
+.row .m{font-size:12.5px;color:var(--app-muted);margin-top:2px;line-height:1.35}
+.sw{appearance:none;cursor:pointer;flex:none;width:46px;height:27px;border-radius:999px;border:0;background:#D9D4CA;position:relative;transition:background .18s}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:21px;height:21px;border-radius:999px;background:#fff;transition:transform .18s;box-shadow:0 1px 3px rgba(0,0,0,.25)}
+.sw[aria-checked="true"]{background:var(--app-teal)}
+.sw[aria-checked="true"]::after{transform:translateX(19px)}
+.step{display:flex;align-items:center;gap:12px;flex:none}
+.step button{appearance:none;cursor:pointer;width:34px;height:34px;border-radius:11px;border:1.5px solid var(--app-line);background:var(--app-card);color:var(--app-teal);font-size:19px;font-weight:700;line-height:1;font-family:var(--sans)}
+.step .v{font-size:16px;font-weight:700;min-width:54px;text-align:center;font-variant-numeric:tabular-nums}
+
+.lnk{appearance:none;background:none;border:0;font:inherit;cursor:pointer;color:var(--app-teal);font-weight:600;font-size:14.5px;display:flex;justify-content:space-between;align-items:center;width:100%;padding:12px 0;border-bottom:1px solid #F1EDE6;text-align:left}
+.lnk:last-child{border-bottom:0}
+
+.hm{display:grid;grid-template-columns:1fr 92px 34px;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #F1EDE6;font-size:13.5px}
+.hm:last-child{border-bottom:0}
+.hm .tr{height:9px;border-radius:5px;background:#EFEBE3;overflow:hidden}
+.hm .tr i{display:block;height:100%;border-radius:5px}
+.hm .c{text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+
+.note{font-size:12.5px;line-height:1.45;color:var(--app-muted);background:var(--app-sage);border-radius:13px;padding:11px 13px;margin:0}
+.demo{font-size:12px;line-height:1.4;color:var(--mid);background:var(--mid-bg);border-radius:11px;padding:9px 12px;margin:0;font-weight:600}
+
+/* ---------- stage caption ---------- */
+.legend{width:min(620px,100%);display:flex;flex-wrap:wrap;gap:7px;justify-content:center}
+.legend span{font-size:12px;font-weight:600;color:var(--page-muted);border:1px solid var(--page-line);border-radius:999px;padding:5px 11px}
+button:focus-visible,.sw:focus-visible{outline:2.5px solid var(--app-teal);outline-offset:2px;border-radius:10px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="stage">
+  <div class="stage-head">
+    <h1>StudyPace</h1>
+    <p>Clickable prototype. Start a focus session on today's plan, open a week into days, change an estimate, or follow the overload warning.</p>
+  </div>
+
+  <div class="phone">
+  <div class="screen">
+    <div class="status"><span>9:41</span><span>Thu 22 Oct</span></div>
+
+    <div class="appbar" id="bar"></div>
+
+    <!-- TODAY -->
+    <div class="view on" id="v-today">
+      <button class="banner" onclick="go('alert')">
+        <div><b>Next week looks overloaded</b><p>26 October – 1 November · 20–27 hours against your 18-hour limit</p></div>
+        <span class="chev">›</span>
+      </button>
+
+      <div class="meter">
+        <div class="top">
+          <div><div class="rng">11–17 h</div><div class="cap">planned for 19–25 October</div></div>
+          <span class="pill mid"><i class="dot"></i>Balanced</span>
+        </div>
+        <div class="track"><i style="width:61%;background:#8C6210"></i></div>
+        <div class="cap">Limit 18 h a week</div>
+      </div>
+
+      <p class="sec">Today · 2–3 h planned</p>
+      <div id="blocks" style="display:flex;flex-direction:column;gap:9px"></div>
+
+      <p class="sec">Next deadline</p>
+      <button class="tk" onclick="task('hci1')">
+        <div style="min-width:0"><div class="cs">Human–Computer Interaction</div><div class="ttl">Read two papers for the seminar</div><div class="meta">Friday 23 October, 23:59</div></div>
+        <div class="rt"><div class="est">2–4 h</div><div class="estl">Estimate</div></div>
+      </button>
+    </div>
+
+    <!-- FOCUS SESSION -->
+    <div class="view" id="v-focus">
+      <div id="focus-run">
+        <div class="card" style="margin-bottom:14px">
+          <div style="font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--app-teal)" id="f-course">—</div>
+          <div style="font-size:17px;font-weight:600;line-height:1.3;margin-top:4px" id="f-title">—</div>
+        </div>
+
+        <div class="timer" id="f-timer">
+          <div class="big" id="f-big">0 min</div>
+          <div class="of" id="f-of">of 60 min planned</div>
+          <div class="tr"><i id="f-bar" style="width:0%"></i></div>
+          <div class="dev">
+            <span class="devchip" id="f-lock">Phone locked</span>
+            <span class="devchip" id="f-dnd">Do not disturb on</span>
+            <span class="devchip" id="f-int">0 interruptions</span>
+          </div>
+        </div>
+
+        <p class="demo" style="margin-top:14px">Demo speed: one second stands for one minute.</p>
+        <button class="why" style="margin-top:10px" onclick="why(this,'w-rec')">What is recorded? <span>+</span></button>
+        <div class="whybox" id="w-rec">Only how long you worked and whether the phone stayed locked. Never what is on your screen, which apps you open, or where you are.</div>
+        <div style="display:flex;gap:9px;margin-top:14px">
+          <button class="btn sec" id="f-pause" style="flex:1" onclick="pauseFocus()">Pause</button>
+          <button class="btn stop" style="flex:1.3" onclick="stopFocus()">Finish</button>
+        </div>
+      </div>
+
+      <div id="focus-done" style="display:none">
+        <div class="card" style="background:var(--lo-bg);border-color:#C9E0D2;margin-bottom:14px">
+          <b style="font-size:15px;color:var(--lo)">Session logged</b>
+          <p style="margin:5px 0 0;font-size:13px;line-height:1.45;color:var(--app-muted)" id="d-line">—</p>
+        </div>
+
+        <div class="resrow" style="margin-bottom:14px">
+          <div><div class="n" id="d-plan">60</div><div class="l">minutes<br>planned</div></div>
+          <div><div class="n" id="d-act">0</div><div class="l">minutes<br>actually worked</div></div>
+          <div><div class="n" id="d-ints">0</div><div class="l">times the<br>phone unlocked</div></div>
+        </div>
+
+        <div class="card">
+          <p class="sec" style="margin-top:0">What StudyPace learned</p>
+          <p style="margin:9px 0 0;font-size:14px;line-height:1.5" id="d-learn">—</p>
+        </div>
+
+        <button class="btn pri" style="margin-top:14px" onclick="go('calib')">See all my estimates</button>
+        <button class="btn sec" style="margin-top:9px" onclick="go('today')">Back to today</button>
+      </div>
+    </div>
+
+    <!-- CALIBRATION -->
+    <div class="view" id="v-calib">
+      <p class="hint">Every finished focus session is compared with what you planned. After five sessions of one kind, StudyPace starts showing you an adjusted range instead of the one you picked.</p>
+      <div class="card">
+        <p class="sec" style="margin-top:0">How your own estimates behave</p>
+        <div style="margin-top:6px" id="calrows"></div>
+      </div>
+      <div class="card">
+        <p class="sec" style="margin-top:0">What this changes</p>
+        <p style="margin:9px 0 0;font-size:14px;line-height:1.5">You picked <b>2–4 h</b> for lab reports. Your own sessions run about <b>1.6×</b> longer, so the weekly meter now counts them as <b>3–6 h</b>. That is why this week reads 11–17 h and not 9–14 h.</p>
+      </div>
+      <p class="note">Research on the planning fallacy says students underestimate how long work takes, and the interviews said the same. This is the one place where the app can correct for it with your own data instead of a general rule.</p>
+    </div>
+
+    <!-- WEEKS -->
+    <div class="view" id="v-weeks">
+      <p class="hint">Tap a week to open it into days.</p>
+      <div id="weeks" style="display:flex;flex-direction:column;gap:10px"></div>
+      <button class="why" onclick="why(this,'w-lab')">What do the labels mean? <span>+</span></button>
+      <div class="whybox" id="w-lab">Light is under 10 hours, Balanced is 10 to 18, Overloaded is above your weekly limit of 18 hours. The upper number of each range decides the label.</div>
+    </div>
+
+    <!-- TASKS -->
+    <div class="view" id="v-tasks">
+      <div id="tasks" style="display:flex;flex-direction:column;gap:14px"></div>
+    </div>
+
+    <!-- TASK DETAIL -->
+    <div class="view" id="v-task">
+      <div class="card" id="t-head"></div>
+
+      <div class="card">
+        <p class="sec" style="margin-top:0">How long will this take?</p>
+        <div class="chips" id="t-chips" style="margin-top:10px">
+          <button class="chip" aria-pressed="false" onclick="pick(this)">1–2 h</button>
+          <button class="chip" aria-pressed="true" onclick="pick(this)">2–4 h</button>
+          <button class="chip" aria-pressed="false" onclick="pick(this)">4–6 h</button>
+          <button class="chip" aria-pressed="false" onclick="pick(this)">6+ h</button>
+        </div>
+        <button class="why" style="margin-top:9px" onclick="why(this,'w-rng')">Why a range, not an exact number? <span>+</span></button>
+        <div class="whybox" id="w-rng">Three students in the Assignment 2 interviews said an exact number of hours would always be wrong. A CHECK constraint in the database makes a single exact value impossible to store.</div>
+        <div class="learned" id="t-learn">—</div>
+      </div>
+
+      <div class="card">
+        <p class="sec" style="margin-top:0">Milestones</p>
+        <div id="t-ms" style="margin-top:4px"></div>
+      </div>
+
+      <div class="card">
+        <div class="kv"><span class="k">Imported from</span><span class="v" id="t-src">Moodle · LTI 1.3</span></div>
+        <div class="kv"><span class="k">Last sync</span><span class="v">10 minutes ago</span></div>
+        <div class="kv"><span class="k">Buffer before deadline</span><span class="v">24 hours</span></div>
+      </div>
+    </div>
+
+    <!-- ALERT -->
+    <div class="view" id="v-alert">
+      <div class="card" style="border-color:#EBCDC4;background:var(--hi-bg)">
+        <span class="pill hi"><i class="dot"></i>Overloaded</span>
+        <h3 style="margin:11px 0 0;font-size:21px;line-height:1.25">Next week is above your limit</h3>
+        <p style="margin:8px 0 0;font-size:14px;line-height:1.5;color:#6E5C57">26 October – 1 November holds <b>20–27 hours</b> of work. Your weekly limit is 18 hours.</p>
+      </div>
+
+      <div class="card">
+        <p class="sec" style="margin-top:0">Why</p>
+        <div class="kv"><span class="k">Deadlines that week</span><span class="v">5</span></div>
+        <div class="kv"><span class="k">On Thursday and Friday</span><span class="v">3 of them</span></div>
+        <div class="kv"><span class="k">Free days</span><span class="v">None</span></div>
+      </div>
+
+      <div class="card">
+        <p class="sec" style="margin-top:0">One thing you can do</p>
+        <p style="margin:9px 0 13px;font-size:14px;line-height:1.5">Move two study blocks from next Wednesday into this Saturday, which is currently free. Next week would drop to 15–21 hours.</p>
+        <button class="btn pri" onclick="moved()">Move 2 blocks to Saturday</button>
+        <button class="btn sec" style="margin-top:9px" onclick="go('today')">Not now</button>
+      </div>
+
+      <p class="note">You will not be warned about this week again. StudyPace sends one warning per week, seven days ahead.</p>
+    </div>
+
+    <!-- MORE -->
+    <div class="view" id="v-more">
+      <div class="card">
+        <p class="sec" style="margin-top:0">Where deadlines and data come from</p>
+        <div style="margin-top:4px">
+          <div class="src"><div class="ic">LTI</div><div><div class="n">University Moodle</div><div class="m">LTI 1.3 · 5 courses · synced 10 minutes ago</div></div><span class="st">On</span></div>
+          <div class="src"><div class="ic">ICS</div><div><div class="n">Faculty calendar</div><div class="m">iCalendar feed · exam dates and resits</div></div><span class="st">On</span></div>
+          <div class="src"><div class="ic">CAL</div><div><div class="n">Personal calendar</div><div class="m">Busy and free time only · no event titles</div></div><span class="st">On</span></div>
+          <div class="src"><div class="ic">DEV</div><div><div class="n">This phone</div><div class="m">Focus sessions: how long you worked, screen locked or not. 22 sessions recorded.</div></div><span class="st">On</span></div>
+          <div class="src"><div class="ic">+</div><div><div class="n">Tasks you add yourself</div><div class="m">2 tasks · reading group, driving lessons</div></div><span class="st">On</span></div>
+          <div class="src off"><div class="ic">CAM</div><div><div class="n">Photograph of a syllabus</div><div class="m">A future source: scan a paper schedule and read the dates. Each source is a separate adapter, so adding one changes nothing else.</div></div><span class="st">Off</span></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="sec" style="margin-top:0">Settings</p>
+        <div style="margin-top:4px">
+          <div class="row"><div><div class="n">Weekly limit</div><div class="m">Above this, a week is Overloaded</div></div>
+            <div class="step"><button onclick="lim(-1)" aria-label="Lower the limit">−</button><span class="v" id="lim">18 h</span><button onclick="lim(1)" aria-label="Raise the limit">+</button></div></div>
+          <div class="row"><div><div class="n">Warn me 7 days ahead</div><div class="m">Once per week, with one suggested action</div></div>
+            <button class="sw" role="switch" aria-checked="true" aria-label="Warn me seven days ahead" onclick="sw(this)"></button></div>
+          <div class="row"><div><div class="n">Repeat the warning</div><div class="m">Off, because repeated reminders get ignored</div></div>
+            <button class="sw" role="switch" aria-checked="false" aria-label="Repeat the warning" onclick="sw(this)"></button></div>
+          <div class="row"><div><div class="n">Adjust estimates from my sessions</div><div class="m">Uses your own focus sessions, nothing else</div></div>
+            <button class="sw" role="switch" aria-checked="true" aria-label="Adjust estimates from my sessions" onclick="sw(this)"></button></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <p class="sec" style="margin-top:0">Account</p>
+        <div style="margin-top:4px">
+          <div class="kv"><span class="k">Signed in as</span><span class="v">Student · group BIT-2302</span></div>
+          <button class="lnk" onclick="go('calib')"><span>How my estimates behave</span><span>›</span></button>
+          <button class="lnk" onclick="go('statusv')"><span>What works today</span><span>›</span></button>
+          <button class="lnk" onclick="go('teach')"><span>Open the instructor view</span><span>›</span></button>
+          <button class="lnk" onclick="go('privacy')"><span>Where your data is stored</span><span>›</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STATUS -->
+    <div class="view" id="v-statusv">
+      <p class="hint">An honest list. Done means it works in this prototype. Partly means it works on fixed sample data. Planned means it is designed but not built.</p>
+      <div class="card">
+        <p class="sec" style="margin-top:0">Functions</p>
+        <div style="margin-top:4px">
+          <div class="fn"><div class="n">Weekly workload meter<span>Light, Balanced or Overloaded against your own limit</span></div><span class="badge d">Done</span></div>
+          <div class="fn"><div class="n">A week opened into days<span>Added after the Assignment 2 interviews</span></div><span class="badge d">Done</span></div>
+          <div class="fn"><div class="n">Effort as a range, never one number<span>Enforced by a CHECK constraint in the database</span></div><span class="badge d">Done</span></div>
+          <div class="fn"><div class="n">One overload warning with one action<span>Enforced by a UNIQUE key in the database</span></div><span class="badge d">Done</span></div>
+          <div class="fn"><div class="n">Focus session with device state<span>Runs at demo speed here: one second stands for one minute</span></div><span class="badge d">Done</span></div>
+          <div class="fn"><div class="n">Estimates adjusted from your own sessions<span>Shown on 22 recorded sessions of sample data</span></div><span class="badge p">Partly</span></div>
+          <div class="fn"><div class="n">Instructor dashboard<span>Fixed sample group; the minimum-of-five rule is real and lives in the database</span></div><span class="badge p">Partly</span></div>
+          <div class="fn"><div class="n">Import from Moodle over LTI 1.3<span>Designed in Assignment 1, schema ready, not connected to a live LMS</span></div><span class="badge n">Planned</span></div>
+          <div class="fn"><div class="n">iCalendar import<span>Same adapter design, not connected</span></div><span class="badge n">Planned</span></div>
+          <div class="fn"><div class="n">Photograph a syllabus to read dates<span>A new import adapter; nothing built yet</span></div><span class="badge n">Planned</span></div>
+          <div class="fn"><div class="n">Push notifications to the phone<span>Needs a real app build, not a web prototype</span></div><span class="badge n">Planned</span></div>
+        </div>
+      </div>
+      <p class="note">The database behind this prototype is real: nine tables, two views and six working queries, submitted as studypace.sql in Assignment 3.</p>
+    </div>
+
+    <!-- INSTRUCTOR -->
+    <div class="view" id="v-teach">
+      <p class="hint">What the group already owes, before you publish one more deadline. No individual student is shown.</p>
+      <div class="card">
+        <p class="sec" style="margin-top:0">Group BIT-2302 · 24 students</p>
+        <div style="margin-top:6px">
+          <div class="hm"><span>19–25 Oct</span><span class="tr"><i style="width:29%;background:#2F7D4E"></i></span><span class="c">7</span></div>
+          <div class="hm"><span>26 Oct – 1 Nov</span><span class="tr"><i style="width:79%;background:#A8503C"></i></span><span class="c">19</span></div>
+          <div class="hm"><span>2–8 Nov</span><span class="tr"><i style="width:13%;background:#2F7D4E"></i></span><span class="c">3</span></div>
+          <div class="hm"><span>9–15 Nov</span><span class="tr"><i style="width:46%;background:#8C6210"></i></span><span class="c">11</span></div>
+        </div>
+        <p class="hint" style="margin-top:10px">Number of students whose own weekly limit that week exceeds.</p>
+      </div>
+      <div class="card">
+        <p class="sec" style="margin-top:0">Adding a deadline</p>
+        <p style="margin:9px 0 0;font-size:14px;line-height:1.5">Thursday 29 October already carries three deadlines for this group. Monday 2 November carries none.</p>
+        <button class="btn pri" style="margin-top:13px" onclick="go('teach')">Suggest 2 November instead</button>
+      </div>
+      <p class="note">Groups smaller than five students are never shown. The rule lives in the database, not in this screen, so no report can be built around it.</p>
+    </div>
+
+    <!-- PRIVACY -->
+    <div class="view" id="v-privacy">
+      <div class="card">
+        <p style="margin:0;font-size:14.5px;line-height:1.55">Everything that can identify you — your name, your courses, your tasks, your plan and your focus sessions — is stored on servers inside Kazakhstan, as Law No. 94-V, Article 12(2) requires.</p>
+      </div>
+      <div class="card">
+        <div class="kv"><span class="k">Your tasks and plan</span><span class="v">Kazakhstan</span></div>
+        <div class="kv"><span class="k">Your focus sessions</span><span class="v">Kazakhstan</span></div>
+        <div class="kv"><span class="k">Backups</span><span class="v">Kazakhstan</span></div>
+        <div class="kv"><span class="k">Icons, fonts, help pages</span><span class="v">Global cache</span></div>
+        <div class="kv"><span class="k">Connection</span><span class="v">TLS 1.3</span></div>
+      </div>
+      <p class="note">A focus session stores four things: which block, when it started, how many minutes it lasted, and how many times the phone was unlocked. Not what was on the screen, not which apps you opened, not where you were.</p>
+      <p class="note">Your instructors can see how loaded the group is. They can never see your plan, your estimates, your sessions or your deadlines.</p>
+    </div>
+
+    <div class="tabbar" id="tabs">
+      <button onclick="go('today')" data-t="today"><svg viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5.5 9.5V20h13V9.5"/></svg>Today</button>
+      <button onclick="go('weeks')" data-t="weeks"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2.5"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>Weeks</button>
+      <button onclick="go('tasks')" data-t="tasks"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 1.8-2M4 12l1 1 1.8-2M4 18l1 1 1.8-2"/></svg>Tasks</button>
+      <button onclick="go('more')" data-t="more"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="2.6"/><path d="M19.4 14a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-2.7 1.1v.3a2 2 0 1 1-4 0v-.2a1.6 1.6 0 0 0-2.8-1.1l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1A1.6 1.6 0 0 0 3.5 15a2 2 0 1 1 0-4h.2a1.6 1.6 0 0 0 1-2.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 2.7-1V4a2 2 0 1 1 4 0v.2a1.6 1.6 0 0 0 2.7 1l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0 1 2.7h.3a2 2 0 1 1 0 4h-.2a1.6 1.6 0 0 0-1.4 1Z"/></svg>More</button>
+    </div>
+  </div>
+  </div>
+
+  <div class="legend">
+    <span>Today → Start a focus session</span><span>Weeks → tap a week</span><span>Tasks → tap a task</span><span>Estimate → tap a range</span><span>Banner → the overload warning</span><span>More → what works today</span>
+  </div>
+</div>
+
+<script>
+var LIMIT = 18;
+
+var WEEKS = [
+  {nm:"This week", dt:"19–25 October", min:11, max:17, open:true, now:3,
+   days:[["Mon","19",2,3],["Tue","20",1,2],["Wed","21",3,4],["Thu","22",2,3],["Fri","23",1,2],["Sat","24",0,0],["Sun","25",2,3]]},
+  {nm:"Next week", dt:"26 October – 1 November", min:20, max:27, open:false, now:-1,
+   days:[["Mon","26",3,4],["Tue","27",2,3],["Wed","28",5,6],["Thu","29",4,5],["Fri","30",3,4],["Sat","31",1,2],["Sun","1",2,3]]},
+  {nm:"In two weeks", dt:"2–8 November", min:5, max:9, open:false, now:-1,
+   days:[["Mon","2",1,2],["Tue","3",0,0],["Wed","4",1,2],["Thu","5",2,3],["Fri","6",0,0],["Sat","7",0,0],["Sun","8",1,2]]},
+  {nm:"In three weeks", dt:"9–15 November", min:10, max:16, open:false, now:-1,
+   days:[["Mon","9",2,3],["Tue","10",1,2],["Wed","11",2,3],["Thu","12",3,4],["Fri","13",1,2],["Sat","14",0,0],["Sun","15",1,2]]}
+];
+
+var TASKS = [
+  {id:"alg4", wk:0, cs:"Algorithms", ttl:"Problem set 4", due:"Monday 19 October", est:"2–4 h", chip:"2–4 h", done:true, src:"Moodle · LTI 1.3", kind:"Problem sets",
+   ms:[["Solve problems 1–3","Fri 16 Oct",true],["Solve problems 4–6","Sun 18 Oct",true],["Check and submit","Mon 19 Oct",true]]},
+  {id:"db1", wk:0, cs:"Database Systems", ttl:"ER diagram for the course project", due:"Wednesday 21 October", est:"2–4 h", chip:"2–4 h", done:true, src:"Moodle · LTI 1.3", kind:"Problem sets",
+   ms:[["Draft the entities","Mon 19 Oct",true],["Add relationships","Tue 20 Oct",true],["Submit","Wed 21 Oct",true]]},
+  {id:"hci1", wk:0, cs:"Human–Computer Interaction", ttl:"Read two papers for the seminar", due:"Friday 23 October", est:"2–4 h", chip:"2–4 h", done:false, src:"Moodle · LTI 1.3", kind:"Reading and seminars",
+   ms:[["Read paper 1","Wed 21 Oct",true],["Read paper 2","Thu 22 Oct",false],["Write the one-page summary","Fri 23 Oct",false]]},
+  {id:"eng1", wk:0, cs:"Academic English", ttl:"Essay draft", due:"Sunday 25 October", est:"1–2 h", chip:"1–2 h", done:false, src:"Moodle · LTI 1.3", kind:"Essays",
+   ms:[["Outline","Thu 22 Oct",false],["Write the draft","Sat 24 Oct",false]]},
+  {id:"phy3", wk:0, cs:"Physics Lab", ttl:"Lab report 3", due:"Sunday 25 October", est:"2–4 h", chip:"2–4 h", done:false, src:"Faculty calendar · iCalendar", kind:"Lab reports",
+   ms:[["Collect the measurements","Thu 22 Oct",false],["Plot the graphs","Sat 24 Oct",false],["Write the discussion","Sun 25 Oct",false]]},
+
+  {id:"db2", wk:1, cs:"Database Systems", ttl:"Midterm project report", due:"Wednesday 28 October", est:"6+ h", chip:"6+ h", done:false, src:"Moodle · LTI 1.3", kind:"Essays",
+   ms:[["Schema and queries","Sun 25 Oct",false],["Write sections 1–3","Mon 26 Oct",false],["Write sections 4–5","Tue 27 Oct",false],["Proofread and submit","Wed 28 Oct",false]]},
+  {id:"alg5", wk:1, cs:"Algorithms", ttl:"Midterm exam", due:"Thursday 29 October", est:"4–6 h", chip:"4–6 h", done:false, src:"Faculty calendar · iCalendar", kind:"Problem sets",
+   ms:[["Revise graphs","Mon 26 Oct",false],["Revise dynamic programming","Tue 27 Oct",false],["Past papers","Wed 28 Oct",false]]},
+  {id:"hci2", wk:1, cs:"Human–Computer Interaction", ttl:"Usability test report", due:"Friday 30 October", est:"4–6 h", chip:"4–6 h", done:false, src:"Moodle · LTI 1.3", kind:"Essays",
+   ms:[["Run the three sessions","Mon 26 Oct",false],["Write up the findings","Thu 29 Oct",false]]},
+  {id:"eng2", wk:1, cs:"Academic English", ttl:"Final essay", due:"Friday 30 October", est:"2–4 h", chip:"2–4 h", done:false, src:"Moodle · LTI 1.3", kind:"Essays",
+   ms:[["Revise the draft","Wed 28 Oct",false],["Final read","Thu 29 Oct",false]]},
+  {id:"phy4", wk:1, cs:"Physics Lab", ttl:"Lab report 4", due:"Sunday 1 November", est:"2–4 h", chip:"2–4 h", done:false, src:"Faculty calendar · iCalendar", kind:"Lab reports",
+   ms:[["Measurements","Sat 31 Oct",false],["Write-up","Sun 1 Nov",false]]}
+];
+
+var BLOCKS = [
+  {t:"Read paper 2 — HCI seminar", m:"Human–Computer Interaction", cs:"Human–Computer Interaction", kind:"Reading and seminars", plan:60, done:false, actual:0},
+  {t:"Collect the lab measurements", m:"Physics Lab", cs:"Physics Lab", kind:"Lab reports", plan:45, done:false, actual:0},
+  {t:"Outline the English essay", m:"Academic English", cs:"Academic English", kind:"Essays", plan:30, done:false, actual:0}
+];
+
+/* Calibration learned from past focus sessions. ratio = actual / planned. */
+var CAL = [
+  {k:"Reading and seminars", n:6, r:1.4},
+  {k:"Lab reports", n:6, r:1.6},
+  {k:"Problem sets", n:7, r:1.1},
+  {k:"Essays", n:3, r:0.9}
+];
+
+var BARS = {lo:{c:"#2F7D4E", k:"lo", w:"Light"}, mid:{c:"#8C6210", k:"mid", w:"Balanced"}, hi:{c:"#A8503C", k:"hi", w:"Overloaded"}};
+function level(max){ return max > LIMIT ? "hi" : (max < 10 ? "lo" : "mid"); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function calFor(kind){ for (var i=0;i<CAL.length;i++) if (CAL[i].k === kind) return CAL[i]; return null; }
+
+var TITLES = {
+  today:["StudyPace","Thursday 22 October · 5 courses connected",0],
+  weeks:["Your weeks","Built from every deadline StudyPace can see",0],
+  tasks:["Tasks","10 open and finished tasks",0],
+  task:["Task",null,1],
+  alert:["Warning",null,1],
+  focus:["Focus session",null,1],
+  calib:["My estimates",null,1],
+  more:["More",null,0],
+  statusv:["What works today",null,1],
+  teach:["Instructor view",null,1],
+  privacy:["Your data",null,1]
+};
+var BACKTO = {task:"tasks", alert:"today", focus:"today", calib:"more", statusv:"more", teach:"more", privacy:"more"};
+var TABFOR = {task:"tasks", alert:"today", focus:"today", calib:"more", statusv:"more", teach:"more", privacy:"more"};
+
+function go(id){
+  if (id !== "focus") stopTimer();
+  var vs = document.querySelectorAll(".view");
+  for (var i=0;i<vs.length;i++) vs[i].classList.toggle("on", vs[i].id === "v" + "-" + id);
+  var t = TITLES[id], bar = document.getElementById("bar");
+  var back = t[2] ? '<button class="back" onclick="go(\'' + (BACKTO[id] || "today") + '\')">‹ Back</button>' : "";
+  var head = id === "today"
+    ? '<div><div class="mark">StudyPace</div><p class="sub">' + esc(t[1]) + '</p></div>'
+    : '<div style="min-width:0"><h2>' + esc(t[0]) + '</h2>' + (t[1] ? '<p class="sub">' + esc(t[1]) + '</p>' : "") + '</div>';
+  bar.innerHTML = back + head;
+  var tb = document.getElementById("tabs").querySelectorAll("button");
+  var on = TABFOR[id] || id;
+  for (var j=0;j<tb.length;j++){ if (tb[j].getAttribute("data-t") === on) tb[j].setAttribute("aria-current","page"); else tb[j].removeAttribute("aria-current"); }
+  var v = document.getElementById("v-"+id); if (v) v.scrollTop = 0;
+}
+
+/* ---------------- focus session ---------------- */
+var SESS = null, TIMER = null;
+
+function startFocus(i){
+  var b = BLOCKS[i];
+  SESS = {i:i, mins:0, ints:0, locked:true, paused:false};
+  document.getElementById("f-pause").textContent = "Pause";
+  document.getElementById("f-course").textContent = b.cs;
+  document.getElementById("f-title").textContent = b.t;
+  document.getElementById("f-of").textContent = "of " + b.plan + " min planned";
+  document.getElementById("focus-run").style.display = "";
+  document.getElementById("focus-done").style.display = "none";
+  paintTimer();
+  go("focus");
+  TIMER = setInterval(tickFocus, 1000);
+}
+function paintTimer(){
+  var b = BLOCKS[SESS.i];
+  var pct = Math.min(100, Math.round(SESS.mins / b.plan * 100));
+  document.getElementById("f-big").textContent = SESS.mins + " min";
+  document.getElementById("f-bar").style.width = pct + "%";
+  document.getElementById("f-timer").classList.toggle("over", SESS.mins > b.plan);
+  var lock = document.getElementById("f-lock");
+  lock.textContent = SESS.locked ? "Phone locked" : "Phone unlocked";
+  lock.className = "devchip" + (SESS.locked ? "" : " warn");
+  var dnd = document.getElementById("f-dnd");
+  dnd.textContent = SESS.paused ? "Paused" : "Do not disturb on";
+  dnd.className = "devchip" + (SESS.paused ? " warn" : "");
+  var it = document.getElementById("f-int");
+  it.textContent = SESS.ints + (SESS.ints === 1 ? " interruption" : " interruptions");
+  it.className = "devchip" + (SESS.ints ? " warn" : "");
+}
+function tickFocus(){
+  if (!SESS || SESS.paused) return;
+  SESS.mins++;
+  if (SESS.mins === 18 || SESS.mins === 47){ SESS.ints++; SESS.locked = false; }
+  else if (SESS.mins === 20 || SESS.mins === 49){ SESS.locked = true; }
+  paintTimer();
+}
+function stopTimer(){ if (TIMER){ clearInterval(TIMER); TIMER = null; } }
+
+function pauseFocus(){
+  if (!SESS) return;
+  SESS.paused = !SESS.paused;
+  document.getElementById("f-pause").textContent = SESS.paused ? "Resume" : "Pause";
+  paintTimer();
+}
+
+function why(btn, id){
+  var box = document.getElementById(id);
+  var on = box.classList.toggle("on");
+  var s = btn.querySelector("span");
+  if (s) s.textContent = on ? "−" : "+";
+}
+
+function stopFocus(){
+  if (!SESS) return;
+  stopTimer();
+  var b = BLOCKS[SESS.i];
+  var mins = Math.max(1, SESS.mins);
+  b.actual = mins; b.done = true;
+  var c = calFor(b.kind);
+  var ratio = mins / b.plan;
+  if (c){ c.r = Math.round(((c.r * c.n + ratio) / (c.n + 1)) * 10) / 10; c.n++; }
+
+  document.getElementById("d-plan").textContent = b.plan;
+  document.getElementById("d-act").textContent = mins;
+  document.getElementById("d-ints").textContent = SESS.ints;
+  document.getElementById("d-line").textContent =
+    mins > b.plan ? "You worked " + (mins - b.plan) + " minutes longer than you planned."
+    : mins < b.plan ? "You stopped " + (b.plan - mins) + " minutes before the planned end."
+    : "You worked exactly as long as you planned.";
+  document.getElementById("d-learn").innerHTML = c
+    ? "That makes <b>" + c.n + "</b> sessions of the kind “" + esc(c.k) + "”. On your own sessions this kind runs about <b>"
+      + c.r.toFixed(1) + "×</b> the time you plan for it, so StudyPace widens that band for you."
+    : "This is your first session of this kind. StudyPace needs five before it adjusts anything.";
+  document.getElementById("focus-run").style.display = "none";
+  document.getElementById("focus-done").style.display = "";
+  drawBlocks(); drawCal();
+  SESS = null;
+}
+
+function drawCal(){
+  var h = "";
+  for (var i=0;i<CAL.length;i++){
+    var c = CAL[i], up = c.r > 1.05, dn = c.r < 0.95;
+    h += '<div class="cal"><div class="nm">' + esc(c.k) + '<span>' + (c.n >= 5 ? "adjusting your ranges" : "needs " + (5 - c.n) + " more sessions") + '</span></div>'
+       + '<div class="r ' + (up ? "up" : dn ? "dn" : "") + '">' + c.r.toFixed(1) + '×</div>'
+       + '<div class="s">' + c.n + ' sessions</div></div>';
+  }
+  document.getElementById("calrows").innerHTML = h;
+}
+
+/* ---------------- lists ---------------- */
+function drawWeeks(){
+  var h = "";
+  for (var i=0;i<WEEKS.length;i++){
+    var w = WEEKS[i], L = BARS[level(w.max)], dd = "";
+    for (var d=0; d<w.days.length; d++){
+      var day = w.days[d], free = day[3] === 0;
+      var pct = free ? 0 : Math.round(day[3]/8*100);
+      dd += '<div class="day' + (i===0 && d===w.now ? ' now' : '') + '">'
+          + '<span class="d">' + day[0] + ' ' + day[1] + '</span>'
+          + '<span class="tr">' + (free ? "" : '<i style="width:' + pct + '%;background:' + (day[3] > 4 ? BARS.hi.c : day[3] > 2 ? BARS.mid.c : BARS.lo.c) + '"></i>') + '</span>'
+          + '<span class="h' + (free ? ' free' : '') + '">' + (free ? "free" : day[2] + "–" + day[3] + " h") + '</span></div>';
+    }
+    h += '<div class="wk' + (w.open ? " open" : "") + '" id="wk'+i+'">'
+       + '<button class="hd" onclick="toggleWk(' + i + ')" aria-expanded="' + (w.open?"true":"false") + '">'
+       + '<span class="bar" style="background:' + L.c + '"></span>'
+       + '<span style="min-width:0"><span class="nm">' + w.nm + '</span><span class="dt" style="display:block">' + w.dt + '</span></span>'
+       + '<span class="rt"><span style="text-align:right"><span class="hrs" style="display:block">' + w.min + '–' + w.max + ' h</span>'
+       + '<span class="pill ' + L.k + '" style="margin-top:4px"><i class="dot"></i>' + L.w + '</span></span>'
+       + '<span class="chev">▶</span></span></button>'
+       + '<div class="days">' + dd + '</div></div>';
+  }
+  document.getElementById("weeks").innerHTML = h;
+}
+function toggleWk(i){
+  var el = document.getElementById("wk"+i), open = !el.classList.contains("open");
+  var all = document.querySelectorAll(".wk");
+  for (var k=0;k<all.length;k++){ all[k].classList.remove("open"); all[k].querySelector(".hd").setAttribute("aria-expanded","false"); }
+  if (open){ el.classList.add("open"); el.querySelector(".hd").setAttribute("aria-expanded","true"); }
+}
+
+function drawTasks(){
+  var h = "";
+  for (var g=0; g<2; g++){
+    h += '<div><p class="sec">' + (g===0 ? "This week · 19–25 October" : "Next week · 26 October – 1 November") + '</p>'
+       + '<div style="display:flex;flex-direction:column;gap:9px;margin-top:9px">';
+    for (var i=0;i<TASKS.length;i++){
+      var t = TASKS[i]; if (t.wk !== g) continue;
+      h += '<button class="tk" onclick="task(\'' + t.id + '\')">'
+         + '<span style="min-width:0"><span class="cs" style="display:block">' + esc(t.cs) + '</span>'
+         + '<span class="ttl" style="display:block' + (t.done ? ";text-decoration:line-through;color:var(--app-muted)" : "") + '">' + esc(t.ttl) + '</span>'
+         + '<span class="meta" style="display:block">' + (t.done ? "Submitted · " : "Due ") + esc(t.due) + '</span></span>'
+         + '<span class="rt"><span class="est" style="display:block">' + t.est + '</span><span class="estl">Estimate</span></span></button>';
+    }
+    h += '</div></div>';
+  }
+  document.getElementById("tasks").innerHTML = h;
+}
+
+function drawBlocks(){
+  var h = "";
+  for (var i=0;i<BLOCKS.length;i++){
+    var b = BLOCKS[i];
+    h += '<div class="block' + (b.done ? " done" : "") + '">'
+       + '<button class="tickbtn" onclick="tick(' + i + ')" aria-label="Mark done"><span class="tick"><svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span></button>'
+       + '<div class="txt"><div class="ttl">' + esc(b.t) + '</div><div class="meta">' + esc(b.m) + ' · ' + b.plan + ' min planned</div></div>'
+       + (b.actual ? '<span class="logged">' + b.actual + ' min</span>'
+                   : '<button class="startbtn" onclick="startFocus(' + i + ')">Start</button>')
+       + '</div>';
+  }
+  document.getElementById("blocks").innerHTML = h;
+}
+function tick(i){ BLOCKS[i].done = !BLOCKS[i].done; drawBlocks(); }
+
+function task(id){
+  var t = null;
+  for (var i=0;i<TASKS.length;i++) if (TASKS[i].id === id) t = TASKS[i];
+  if (!t) return;
+  document.getElementById("t-head").innerHTML =
+    '<div class="cs" style="font-size:11.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;color:var(--app-teal)">' + esc(t.cs) + '</div>'
+    + '<h3 style="margin:5px 0 0;font-size:20px;line-height:1.25">' + esc(t.ttl) + '</h3>'
+    + '<p style="margin:7px 0 0;font-size:13.5px;color:var(--app-muted)">' + (t.done ? "Submitted " : "Due ") + esc(t.due) + ', 23:59</p>';
+  document.getElementById("t-src").textContent = t.src;
+  var cs = document.getElementById("t-chips").querySelectorAll(".chip");
+  for (var c=0;c<cs.length;c++) cs[c].setAttribute("aria-pressed", cs[c].textContent === t.chip ? "true" : "false");
+
+  var cal = calFor(t.kind), lw = document.getElementById("t-learn");
+  if (cal && cal.n >= 5){
+    var lo = t.chip.replace("+","").split("–")[0];
+    var adj = Math.round(Number(lo) * cal.r * 10) / 10;
+    lw.innerHTML = "From your own <b>" + cal.n + "</b> sessions of “" + esc(cal.k) + "”, work like this takes you about <b>"
+      + cal.r.toFixed(1) + "×</b> what you pick. The weekly meter counts it from about <b>" + adj + " h</b>, not " + lo + " h.";
+  } else if (cal){
+    lw.innerHTML = "StudyPace has <b>" + cal.n + "</b> of your sessions for “" + esc(cal.k) + "”. After five it starts adjusting this range for you.";
+  } else {
+    lw.textContent = "No focus sessions recorded for this kind of work yet.";
+  }
+
+  var h = "";
+  for (var m=0;m<t.ms.length;m++){
+    var x = t.ms[m];
+    h += '<div class="ms' + (x[2] ? " done" : "") + '"><span class="tick"><svg viewBox="0 0 24 24"><path d="M4 12.5 9.5 18 20 6.5"/></svg></span>'
+       + '<span style="min-width:0"><span class="t" style="display:block">' + esc(x[0]) + '</span><span class="w" style="display:block">' + esc(x[1]) + '</span></span>'
+       + (x[1].indexOf("22 Oct") > -1 && !x[2] ? '<span class="tag">Today</span>' : "") + '</div>';
+  }
+  document.getElementById("t-ms").innerHTML = h;
+  go("task");
+}
+
+function pick(btn){
+  var cs = btn.parentNode.querySelectorAll(".chip");
+  for (var i=0;i<cs.length;i++) cs[i].setAttribute("aria-pressed","false");
+  btn.setAttribute("aria-pressed","true");
+}
+function sw(b){ b.setAttribute("aria-checked", b.getAttribute("aria-checked") === "true" ? "false" : "true"); }
+function lim(d){
+  LIMIT = Math.min(30, Math.max(8, LIMIT + d));
+  document.getElementById("lim").textContent = LIMIT + " h";
+  drawWeeks();
+}
+function moved(){
+  WEEKS[1].min = 15; WEEKS[1].max = 21;
+  WEEKS[1].days[2] = ["Wed","28",2,3];
+  WEEKS[0].min = 13; WEEKS[0].max = 20;
+  WEEKS[0].days[5] = ["Sat","24",2,3];
+  drawWeeks();
+  var b = document.querySelector("#v-today .banner");
+  if (b) b.outerHTML = '<div class="card" style="background:var(--lo-bg);border-color:#C9E0D2"><b style="font-size:14.5px;color:#2F7D4E">Two blocks moved to Saturday 24 October</b>'
+    + '<p style="margin:5px 0 0;font-size:13px;line-height:1.45;color:var(--app-muted)">Next week is now 15–21 hours. You will not be warned about it again.</p></div>';
+  go("weeks");
+  toggleWk(1);
+}
+
+drawWeeks(); drawTasks(); drawBlocks(); drawCal(); go("today");
+</script>
+
+</body>
+</html>
